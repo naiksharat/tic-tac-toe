@@ -76,6 +76,7 @@
       appId: "1:708281806819:web:abe2b0db5ee4731c5cfad6"
     };
 
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -85,6 +86,10 @@
 
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
 
     function renderBoard(board, currentTurn, winner) {
       boardEl.innerHTML = '';
@@ -111,6 +116,7 @@
     }
 
     function joinGame() {
+      setStatus('Connecting…');
       gameId = document.getElementById('gameIdInput').value.trim();
       if (!gameId) return alert('Enter a game ID');
 
@@ -119,6 +125,7 @@
       gameRef.once('value', snapshot => {
         if (!snapshot.exists()) {
           player = 'X';
+          setStatus('Connected as X');
           gameRef.set({
             board: Array(9).fill(null),
             turn: 'X',
@@ -129,6 +136,7 @@
           const data = snapshot.val();
           if (!data.players?.O) {
             player = 'O';
+            setStatus('Connected as O');
             gameRef.child('players/O').set(true);
           } else {
             alert('Game already has 2 players');
@@ -141,10 +149,12 @@
     }
 
     function listenToGame() {
+      setStatus('Waiting for game data…');
       gameRef.on('value', snapshot => {
         const data = snapshot.val();
         if (!data) return;
         renderBoard(data.board, data.turn, data.winner);
+        setStatus(`You are ${player}. Turn: ${data.turn}`);
       });
     }
 
