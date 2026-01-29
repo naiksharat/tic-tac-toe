@@ -123,6 +123,7 @@
       gameRef = db.ref('games/' + gameId);
 
       gameRef.once('value', snapshot => {
+        console.log('Initial snapshot:', snapshot.val());
         if (!snapshot.exists()) {
           player = 'X';
           setStatus('Connected as X');
@@ -145,14 +146,23 @@
         }
 
         listenToGame();
+        // Force initial render in case listener lags
+        gameRef.once('value').then(snap => {
+          const data = snap.val();
+          if (data) {
+            renderBoard(data.board, data.turn, data.winner);
+            setStatus(`You are ${player}. Turn: ${data.turn}`);
+          }
+        });
       });
     }
 
     function listenToGame() {
       setStatus('Waiting for game data…');
       gameRef.on('value', snapshot => {
+        console.log('Realtime update:', snapshot.val());
         const data = snapshot.val();
-        if (!data) return;
+        if (!data || !data.board) return;
         renderBoard(data.board, data.turn, data.winner);
         setStatus(`You are ${player}. Turn: ${data.turn}`);
       });
